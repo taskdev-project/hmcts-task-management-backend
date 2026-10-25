@@ -236,6 +236,49 @@ class TaskControllerTest {
         verify(taskRepository, never()).save(any());
     }
 
+    @Test
+    void createTaskRejectsPastDueDate() throws Exception {
+        mockMvc.perform(post("/api/tasks")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                {
+                  "title": "Past due task",
+                  "description": "This should be rejected",
+                  "status": "TODO",
+                  "dueDate": "2020-01-01T10:00:00"
+                }
+                """))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.messages.dueDate")
+                           .value("Due date must be in the future"));
+
+        verify(taskRepository, never()).save(any());
+    }
+
+    @Test
+    void createTaskAllowsNullDueDate() throws Exception {
+        when(taskRepository.save(any()))
+            .thenAnswer(invocation -> {
+                var task = invocation.getArgument(
+                    0, uk.gov.hmcts.reform.dev.models.Task.class);
+                task.setId(2);
+                return task;
+            });
+
+        mockMvc.perform(post("/api/tasks")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                {
+                  "title": "Task without due date",
+                  "status": "TODO",
+                  "dueDate": null
+                }
+                """))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.title").value("Task without due date"));
+
+        verify(taskRepository).save(any());
+    }
 
     @Test
     void updateTaskStatusReturnsNotFoundWhenMissing() throws Exception {

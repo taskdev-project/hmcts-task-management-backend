@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Future;
 
 import java.time.LocalDateTime;
 
@@ -36,6 +37,7 @@ public class Task {
     )
     private String status;
 
+    @Future(message = "Due date must be in the future")
     private LocalDateTime dueDate;
 
 }
